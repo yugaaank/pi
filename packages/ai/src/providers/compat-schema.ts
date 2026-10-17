@@ -192,6 +192,12 @@ export const OpenAICompletionsCompatSchema = Type.Object(
 				description: "Whether the provider supports the store field. Default: auto-detected from URL.",
 			}),
 		),
+		supportsContentArray: Type.Optional(
+			Type.Boolean({
+				description:
+					"Whether the provider accepts message content as an array of content parts. Default: true. Set false for OpenAI-compatible endpoints that reject the parts array; text-only content is then sent as a plain string.",
+			}),
+		),
 		supportsDeveloperRole: optionalCompatBoolean({
 			description:
 				"Whether the provider supports the developer role instead of system. Default: auto-detected from URL.",

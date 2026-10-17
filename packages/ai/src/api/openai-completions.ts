@@ -173,13 +173,15 @@ type ResolvedOpenAICompletionsCompat = Omit<
 	| "supportsThinkingTokenBudget"
 	| "thinkingTokenBudgetField"
 	| "supportsMidConvoSystemMessages"
-	| "supportsMidConvoToolAdditions"
+	| "supportsContentArray"
 	| "vllmPriority"
 > & {
 	cacheControlFormat?: OpenAICompletionsCompat["cacheControlFormat"];
 	supportsThinkingTokenBudget?: OpenAICompletionsCompat["supportsThinkingTokenBudget"];
 	thinkingTokenBudgetField?: OpenAICompletionsCompat["thinkingTokenBudgetField"];
 	supportsMidConvoSystemMessages?: OpenAICompletionsCompat["supportsMidConvoSystemMessages"];
+	/** Undefined means the default: content-parts arrays are supported. */
+	supportsContentArray?: OpenAICompletionsCompat["supportsContentArray"];
 	supportsMidConvoToolAdditions?: OpenAICompletionsCompat["supportsMidConvoToolAdditions"];
 	vllmPriority?: OpenAICompletionsCompat["vllmPriority"];
 };
@@ -1285,10 +1287,20 @@ export function convertMessages(
 						}
 					});
 				if (content.length === 0) continue;
-				params.push({
-					role: "user",
-					content,
-				});
+				// Some OpenAI-compatible endpoints reject the content-parts array and accept
+				// only a plain string for text-only content.
+				if (compat.supportsContentArray === false && content.every((part) => part.type === "text")) {
+					const text = content.map((part) => (part.type === "text" ? part.text : "")).join("\n");
+					params.push({
+						role: "user",
+						content: text,
+					});
+				} else {
+					params.push({
+						role: "user",
+						content,
+					});
+				}
 			}
 		} else if (msg.role === "assistant") {
 			// Some providers don't accept null content, use empty string instead
@@ -1645,6 +1657,7 @@ function detectCompat(model: Model<"openai-completions">): ResolvedOpenAIComplet
 
 	return {
 		supportsStore: !isNonStandard,
+		supportsContentArray: true,
 		supportsDeveloperRole: isOpenRouterDeveloperRoleModel || (!isNonStandard && !isOpenRouter),
 		supportsReasoningEffort:
 			!isGrok && !isZai && !isMoonshot && !isTogether && !isCloudflareAiGateway && !isNvidia && !isAntLing,
@@ -1701,6 +1714,7 @@ function getCompat(model: Model<"openai-completions">): ResolvedOpenAICompletion
 
 	return {
 		supportsStore: model.compat.supportsStore ?? detected.supportsStore,
+		supportsContentArray: model.compat.supportsContentArray ?? detected.supportsContentArray,
 		supportsDeveloperRole: model.compat.supportsDeveloperRole ?? detected.supportsDeveloperRole,
 		supportsReasoningEffort: model.compat.supportsReasoningEffort ?? detected.supportsReasoningEffort,
 		supportsUsageInStreaming: model.compat.supportsUsageInStreaming ?? detected.supportsUsageInStreaming,

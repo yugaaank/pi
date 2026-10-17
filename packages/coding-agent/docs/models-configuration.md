@@ -111,6 +111,7 @@ See [Describe model input and caching](models.md#describe-model-input-and-cachin
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `supportsStore` | boolean |  | Whether the provider supports the store field. Default: auto-detected from URL. |
+| `supportsContentArray` | boolean |  | Whether the provider accepts message content as an array of content parts. Default: true. Set false for OpenAI-compatible endpoints that reject the parts array; text-only content is then sent as a plain string. |
 | `supportsDeveloperRole` | boolean |  | Whether the provider supports the developer role instead of system. Default: auto-detected from URL. |
 | `supportsReasoningEffort` | boolean |  | Whether the provider supports reasoning_effort. Default: auto-detected from URL. |
 | `supportsUsageInStreaming` | boolean | `true` | Whether the provider supports stream_options.include_usage for token usage in streaming responses. |
